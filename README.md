@@ -23,6 +23,10 @@ paper sizes.
 
   - `*.sty` → $TEXMF/tex/latex/BXpapersize
 
+### License
+
+This package is distributed under the MIT License.
+
 The bxpapersize Package
 -----------------------
 
@@ -34,9 +38,9 @@ The available options are described hereafter.
 
 #### Annihilation
 
-  * `disable`: Disables all functionality of this package. It may be
+  * `disabled`: Disables all functionality of this package. It may be
     useful to resolve conflict caused by some packages depending on
-    the bxpapersize package. Note that once `disable` is used there
+    the bxpapersize package. Note that once `disabled` is used there
     is no way to enable the functionality.
 
 

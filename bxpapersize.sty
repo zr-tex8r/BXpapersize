@@ -10,10 +10,10 @@
 
 %--------------------------------------- options
 
-%% 'disable'
-\chardef\bxpr@disable=0
-\DeclareOption{disable}{%
-  \chardef\bxpr@disable=1 }
+%% 'disabled'
+\chardef\bxpr@disabled=0
+\DeclareOption{disabled}{%
+  \chardef\bxpr@disabled=1 }
 %% keyval
 \@onlypreamble\bxpr@kvopt
 \let\bxpr@kvopt\@empty
@@ -21,8 +21,8 @@
   \edef\bxpr@kvopt{\bxpr@kvopt,\CurrentOption}}
 \ProcessOptions*
 
-%% If 'disable' is given, quit now.
-\ifnum\bxpr@disable>\z@
+%% If 'disabled' is given, quit now.
+\ifnum\bxpr@disabled>\z@
   \newcommand*\bxpapersizesetup[1]{}%
 \expandafter\endinput\fi\relax
 
