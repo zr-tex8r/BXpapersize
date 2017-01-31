@@ -2,7 +2,7 @@
 
 %% package declaration
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{bxpapersize}[2016/03/26 v0.2]
+\ProvidesPackage{bxpapersize}[2017/02/05 v0.3pre]
 
 %% preparation
 \def\bxpr@pkgname{bxpapersize}
@@ -10,10 +10,16 @@
 
 %--------------------------------------- options
 
-%% 'disabled'
+%% 'disabled' / 'nodvidriver'
 \chardef\bxpr@disabled=0
 \DeclareOption{disabled}{%
   \chardef\bxpr@disabled=1 }
+\DeclareOption{nodvidriver}{%
+  \chardef\bxpr@disabled=1 }
+%% 'olddvips'
+\chardef\bxpr@olddvips=0
+\DeclareOption{olddvips}{%
+  \chardef\bxpr@olddvips=1 }
 %% keyval
 \@onlypreamble\bxpr@kvopt
 \let\bxpr@kvopt\@empty
@@ -23,6 +29,7 @@
 
 %% If 'disabled' is given, quit now.
 \ifnum\bxpr@disabled>\z@
+  \providecommand*\papersizesetup{\bxpapersizesetup}%
   \newcommand*\bxpapersizesetup[1]{}%
 \expandafter\endinput\fi\relax
 
@@ -83,19 +90,31 @@
   \let\bxpr@mode\bxpr@mode@@pdfmode
 \fi
 
+%% \bxpr@csletcs{<CSa>}{<CSb>}
+\def\bxpr@csletcs#1#2{%
+  \expandafter\let\csname#1\expandafter\endcsname\csname#2\endcsname}
+
 %--------------------------------------- parameters
 
 %% constants
 \chardef\bxpr@priority@@low=0
 \chardef\bxpr@priority@@middle=1
+\chardef\bxpr@priority@@default=1
 \chardef\bxpr@priority@@high=2
+\ifnum\bxpr@olddvips>\z@
+  \chardef\bxpr@priority@@low=2
+  \chardef\bxpr@priority@@high=0
+\fi
 \chardef\bxpr@size@@real=0 %'real', use \paperwidth/height
-\chardef\bxpr@size@@box=1 %'box', use shipout box size
-\chardef\bxpr@size@@boxS=2 %'box*'
-\chardef\bxpr@size@@custom=3 % size explicitly given
+\chardef\bxpr@size@@realS=1 %'real*'
+\bxpr@csletcs{bxpr@size@@real*}{bxpr@size@@realS}
+\chardef\bxpr@size@@box=2 %'box', use shipout box size
+\chardef\bxpr@size@@boxS=3 %'box*'
+\bxpr@csletcs{bxpr@size@@box*}{bxpr@size@@boxS}
+\chardef\bxpr@size@@custom=4 % size explicitly given
 
 %% variables
-\let\bxpr@priority\bxpr@priority@@middle
+\let\bxpr@priority\bxpr@priority@@default
 \let\bxpr@size\bxpr@size@@real
 \def\bxpr@cs@width{\z@}%  custom page width
 \def\bxpr@cs@height{\z@}% custom page height
@@ -117,19 +136,20 @@
 \bxpr@activetrue
 
 %% 'priority'
-\define@choicekey*+{bxpr}{priority}[\bxpr@tmpa\bxpr@tmpb]%
-    {low,middle,high}%
- {\bxpr@set@priority}%
+\define@choicekey*+{bxpr}{priority}%
+    {low,middle,default,high}%
+ {\bxpr@set@priority{#1}}%
  {\bxpr@ivval{priority}{#1}}
-\def\bxpr@set@priority{%
-  \chardef\bxpr@priority\bxpr@tmpb\relax}
+\def\bxpr@set@priority#1{%
+  \bxpr@csletcs{bxpr@priority}{bxpr@priority@@#1}}
 \AtBeginDocument{%
-  \def\bxpr@set@priority{\bxpr@err@nlprm{priority}}}
+  \def\bxpr@set@priority#1{% invalidate
+    \bxpr@err@nlprm{priority}}}
 
 %% 'size'
-\define@choicekey*+{bxpr}{size}[\bxpr@tmpa\bxpr@tmpb]%
-    {real,box,box*}%
- {\chardef\bxpr@size\bxpr@tmpb\relax}%
+\define@choicekey*+{bxpr}{size}%
+    {real,real*,box,box*}%
+ {\bxpr@csletcs{bxpr@size}{bxpr@size@@#1}}%
  {% custom page size ('size={<width>,<height>}')
   \def\bxpr@tmpa##1,##2,##3\@nil{%
     \begingroup\setbox\z@\hbox{%
@@ -151,6 +171,10 @@
 %%<*> \bxpapersizesetup{<key>=<value>,...}
 \newcommand*\bxpapersizesetup[1]{%
   \setkeys{bxpr}{#1}}
+%%<*> \papersizesetup{<key>=<value>,...}
+% Synonym for \bxpapersizesetup, declared only if not yet defined.
+\providecommand*\papersizesetup{%
+  \bxpapersizesetup}
 
 %--------------------------------------- page hook
 
@@ -165,12 +189,12 @@
     \the\toks@}
 \endgroup
 
-%% \bxpr@begindoc@second@hook
+%% \bxpr@begindoc@last@hook
 % Placed after the begin-docuemnt hook.
-\def\bxpr@begindoc@second@hook{%
-  \let\bxpr@begindoc@second@hook\@undefined}
+\def\bxpr@begindoc@last@hook{%
+  \let\bxpr@begindoc@last@hook\@undefined}
 \g@addto@macro\document{%
-  \bxpr@begindoc@second@hook}
+  \bxpr@begindoc@last@hook}
 
 %% add hook for every page
 \g@addto@macro\bxpr@begindoc@first@hook{%
@@ -190,7 +214,7 @@
         \bxpr@page@process
         \AtBeginShipoutNext{\bxpr@every@page@hook}}%
       \AtBeginShipoutFirst{\bxpr@special@chunk}
-    \or % middle
+    \or % default
       \def\bxpr@every@page@hook{%
         \bxpr@page@process
         \bxpr@modify@output@box\relax\bxpr@special@chunk}%
@@ -210,7 +234,14 @@
     \AtBeginShipout{\bxpr@every@page@hook}%
   \fi}
 
-%% \bxpr@modify@output@box
+%% \bxpr@tombow
+\chardef\bxpr@tombow=0
+\expandafter\ifx\csname iftombow\expandafter\endcsname
+    \csname iftrue\endcsname
+  \chardef\bxpr@tombow=1
+\fi
+
+%% \bxpr@modify@output@box{<pre>}{<post>}
 \def\bxpr@modify@output@box#1#2{%
   \setbox\AtBeginShipoutBox\vbox{%
     #1\box\AtBeginShipoutBox#2}}
@@ -233,7 +264,7 @@
     \edef\bxpr@tmpa{%
       \paperwidth=\the\paperwidth
       \paperheight=\the\paperheight}%
-    \expandafter\g@addto@macro\expandafter\bxpr@begindoc@second@hook
+    \expandafter\g@addto@macro\expandafter\bxpr@begindoc@last@hook
         \expandafter{\bxpr@tmpa}%
   }{}}
 
@@ -245,8 +276,13 @@
 %% \bxpr@set@page@size{<width>}{<height>}
 \ifcase\bxpr@mode %dvi
   \def\bxpr@set@page@size#1#2{%
-    \bxpr@dima=#1\relax \edef\bxpr@tmpb{\the\bxpr@dima}%
-    \bxpr@dima=#2\relax \edef\bxpr@tmpb{\bxpr@tmpb,\the\bxpr@dima}%
+    \begingroup
+      \bxpr@let@real@mag@to\bxpr@tmpa
+      \paperwidth=#1\relax \paperwidth=\bxpr@tmpa\paperwidth
+      \paperheight=#2\relax \paperheight=\bxpr@tmpa\paperheight
+      \xdef\bxpr@g@next{%
+        \def\noexpand\bxpr@tmpb{\the\paperwidth,\the\paperheight}}%
+    \endgroup \bxpr@g@next
     \bxDebug{papersize=\bxpr@tmpb}%
     \edef\bxpr@special@chunk{\special{papersize=\bxpr@tmpb}}}%
 \else %pdf
@@ -255,6 +291,17 @@
     \bxDebug{papersize=\the\bxpr@pagewidth,\the\bxpr@pageheight}}%
 \fi
 
+%% \bxpr@let@real@mag@to\CS
+\def\bxpr@let@real@mag@to#1{%
+  \begingroup
+    \@tempcnta=\mag \advance\@tempcnta100000
+    \def\bxpr@tmpa1##1##2##3##4##5\relax{%
+      \@tempdima=##1##2.##3##4##5\p@}%
+    \expandafter\bxpr@tmpa\the\@tempcnta\relax
+    \xdef\bxpr@g@next{%
+      \def\noexpand#1{\strip@pt\@tempdima}}%
+  \endgroup \bxpr@g@next}
+
 %% \bxpr@page@process
 \def\bxpr@page@process{%
   \ifbxpr@active
@@ -262,16 +309,10 @@
   \fi}
 \def\bxpr@page@process@a{%
   \ifcase\bxpr@size % real
-    \ifcase\bxpr@mode % dvi
-      \ifnum\mag=\@m
-        \bxpr@set@page@size{\paperwidth}{\paperheight}%
-      \else
-        \bxpr@apply@mag
-        \bxpr@set@page@size{\bxpr@width}{\bxpr@height}%
-      \fi
-    \or % pdf
-      \bxpr@set@page@size{\paperwidth}{\paperheight}%
-    \fi
+    \bxpr@use@real@size
+    \bxpr@set@page@size{\bxpr@width}{\bxpr@height}%
+  \or % real*
+    \bxpr@set@page@size{\paperwidth}{\paperheight}%
   \or % box
     \bxpr@use@box@size
     \setbox\AtBeginShipoutBox\vbox{%
@@ -285,20 +326,23 @@
     \bxpr@set@page@size{\bxpr@cs@width}{\bxpr@cs@height}%
   \fi}
 
-%% \bxpr@apply@mag
-\def\bxpr@apply@mag{%
+%% \bxpr@use@real@size
+\def\bxpr@use@real@size{%
+  \bxpr@use@real@size@a{width}%
+  \bxpr@use@real@size@a{height}}
+\def\bxpr@use@real@size@a#1{%
   \begingroup
-    \ifnum\mag=\@m\else
-      \@tempcnta=\mag \advance\@tempcnta100000
-      \def\bxpr@next1##1##2##3##4##5\relax{%
-        \def\bxpr@tmpa{##1##2.##3##4##5}}%
-      \expandafter\bxpr@next\the\@tempcnta\relax
-      \paperwidth=\bxpr@tmpa\paperwidth
-      \paperheight=\bxpr@tmpa\paperheight
+    \bxpr@csletcs{bxpr@tmpa}{paper#1}%
+    \ifnum\bxpr@tombow>\z@
+      \advance\bxpr@tmpa2in\relax
     \fi
+    \bxpr@csletcs{bxpr@tmpb}{stock#1}%
+    \ifx\bxpr@tmpb\relax\else \ifdim\bxpr@tmpb>\z@
+      \bxpr@tmpa\bxpr@tmpb
+    \fi\fi
     \xdef\bxpr@g@next{%
-      \def\noexpand\bxpr@width{\the\paperwidth}%
-      \def\noexpand\bxpr@height{\the\paperheight}}%
+      \def\expandafter\noexpand\csname bxpr@#1\endcsname{%
+        \the\bxpr@tmpa}}
   \endgroup \bxpr@g@next}
 
 %% \bxpr@use@box@size
