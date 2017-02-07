@@ -2,13 +2,15 @@
 
 %% package declaration
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{bxpapersize}[2017/02/05 v0.3pre]
+\ProvidesPackage{bxpapersize}[2017/02/28 v0.3pre]
 
 %% preparation
 \def\bxpr@pkgname{bxpapersize}
 \providecommand\bxDebug[1]{}
 
 %--------------------------------------- options
+
+% Note: Only non-key-value global options should be picked.
 
 %% 'disabled' / 'nodvidriver'
 \chardef\bxpr@disabled=0
@@ -22,7 +24,7 @@
   \chardef\bxpr@olddvips=1 }
 %% keyval
 \@onlypreamble\bxpr@kvopt
-\let\bxpr@kvopt\@empty
+\let\bxpr@kvopt\@empty % key-value option list
 \DeclareOption*{%
   \edef\bxpr@kvopt{\bxpr@kvopt,\CurrentOption}}
 \ProcessOptions*
@@ -36,13 +38,12 @@
 %--------------------------------------- general
 
 %% load packages
-\RequirePackage{xkeyval}
+\RequirePackage{xkeyval}[2008/08/10]% v2.6
 \RequirePackage{atbegshi}
 \RequirePackage{ifpdf,ifxetex,ifluatex,ifvtex}
 
 %% variables
 \newdimen\bxpr@dima
-\newif\ifbxpr@active
 \let\bxpr@width\relax
 \let\bxpr@height\relax
 
@@ -107,13 +108,12 @@
 \fi
 \chardef\bxpr@size@@real=0 %'real', use \paperwidth/height
 \chardef\bxpr@size@@realS=1 %'real*'
-\bxpr@csletcs{bxpr@size@@real*}{bxpr@size@@realS}
 \chardef\bxpr@size@@box=2 %'box', use shipout box size
 \chardef\bxpr@size@@boxS=3 %'box*'
-\bxpr@csletcs{bxpr@size@@box*}{bxpr@size@@boxS}
 \chardef\bxpr@size@@custom=4 % size explicitly given
 
 %% variables
+\newif\ifbxpr@needs@reset@size
 \let\bxpr@priority\bxpr@priority@@default
 \let\bxpr@size\bxpr@size@@real
 \def\bxpr@cs@width{\z@}%  custom page width
@@ -128,15 +128,23 @@
   \PackageError\bxpr@pkgname
    {Invalid value for '#1': #2}%
    \@ehc}
+\def\bxpr@err@ivkey{%
+  \begingroup \let\MessageBreak\relax % freeze
+    \let\bxpr@tmpb\@empty
+    \@for\bxpr@tmpa:=\XKV@rm\do{%
+      \edef\bxpr@tmpb{\bxpr@tmpb\MessageBreak\@spaces\bxpr@tmpa}}%
+    \PackageError\bxpr@pkgname
+      {Unknown parameter(s)\bxpr@tmpb\MessageBreak
+       are found in the given list}
+  \endgroup}
 
 %% 'active'
-\define@boolkey+{bxpr}{active}%
- {\@nameuse{bxpr@active#1}}%
+\define@boolkey+[bxpr]{prm}{active}[true]{}%
  {\bxpr@ivval{active}{#1}}
-\bxpr@activetrue
+\bxpr@prm@activetrue
 
 %% 'priority'
-\define@choicekey*+{bxpr}{priority}%
+\define@choicekey*+[bxpr]{prm}{priority}%
     {low,middle,default,high}%
  {\bxpr@set@priority{#1}}%
  {\bxpr@ivval{priority}{#1}}
@@ -146,11 +154,72 @@
   \def\bxpr@set@priority#1{% invalidate
     \bxpr@err@nlprm{priority}}}
 
+%% 'truedimen'
+\define@boolkey+[bxpr]{prm}{truedimen}[true]%
+ {\bxpr@needs@reset@sizetrue}%
+ {\bxpr@ivval{truedimen}{#1}}
+
+%% 'landscape'
+\define@boolkey+[bxpr]{prm}{landscape}[true]%
+ {\bxpr@needs@reset@sizetrue}%
+ {\bxpr@ivval{landscape}{#1}}
+
 %% 'size'
-\define@choicekey*+{bxpr}{size}%
-    {real,real*,box,box*}%
- {\bxpr@csletcs{bxpr@size}{bxpr@size@@#1}}%
+\define@choicekey*+[bxpr]{prm}{size}[\bxpr@tmpa\bxpr@tmpb]%
+    {real,real*,box,box*,
+     % preset paper sizes
+     a0paper,a1paper,a2paper,a3paper,a4paper,a5paper,a6paper,%
+     b0paper,b1paper,b2paper,b3paper,b4paper,b5paper,b6paper,%
+     c0paper,c1paper,c2paper,c3paper,c4paper,c5paper,c6paper,%
+     b0j,b1j,b2j,b3j,b4j,b5j,b6j,%
+     ansiapaper,ansibpaper,ansicpaper,ansidpaper,ansiepaper,%
+     letterpaper,legalpaper,executivepaper,screen}%
+ {\def\bxpr@val@size{#1}\bxpr@needs@reset@sizefalse
+  \ifcase\bxpr@tmpb\relax
+      \let\bxpr@size\bxpr@size@@real
+  \or \let\bxpr@size\bxpr@size@@realS
+  \or \let\bxpr@size\bxpr@size@@box
+  \or \let\bxpr@size\bxpr@size@@boxS
+  \or \bxpr@set@size@a(841,1189){mm}%  a0paper
+  \or \bxpr@set@size@a(594,841){mm}%   a1paper
+  \or \bxpr@set@size@a(420,594){mm}%   a2paper
+  \or \bxpr@set@size@a(297,420){mm}%   a3paper
+  \or \bxpr@set@size@a(210,297){mm}%   a4paper
+  \or \bxpr@set@size@a(148,210){mm}%   a5paper
+  \or \bxpr@set@size@a(105,148){mm}%   a6paper
+  \or \bxpr@set@size@a(1000,1414){mm}% b0paper
+  \or \bxpr@set@size@a(707,1000){mm}%  b1paper
+  \or \bxpr@set@size@a(500,707){mm}%   b2paper
+  \or \bxpr@set@size@a(353,500){mm}%   b3paper
+  \or \bxpr@set@size@a(250,353){mm}%   b4paper
+  \or \bxpr@set@size@a(176,250){mm}%   b5paper
+  \or \bxpr@set@size@a(125,176){mm}%   b6paper
+  \or \bxpr@set@size@a(917,1297){mm}%  c0paper
+  \or \bxpr@set@size@a(648,917){mm}%   c1paper
+  \or \bxpr@set@size@a(458,648){mm}%   c2paper
+  \or \bxpr@set@size@a(324,458){mm}%   c3paper
+  \or \bxpr@set@size@a(229,324){mm}%   c4paper
+  \or \bxpr@set@size@a(162,229){mm}%   c5paper
+  \or \bxpr@set@size@a(114,162){mm}%   c6paper
+  \or \bxpr@set@size@a(1030,1456){mm}% b0j
+  \or \bxpr@set@size@a(728,1030){mm}%  b1j
+  \or \bxpr@set@size@a(515,728){mm}%   b2j
+  \or \bxpr@set@size@a(364,515){mm}%   b3j
+  \or \bxpr@set@size@a(257,364){mm}%   b4j
+  \or \bxpr@set@size@a(182,257){mm}%   b5j
+  \or \bxpr@set@size@a(128,182){mm}%   b6j
+  \or \bxpr@set@size@a(8.5,11){in}%    ansiapaper
+  \or \bxpr@set@size@a(11,17){in}%     ansibpaper
+  \or \bxpr@set@size@a(17,22){in}%     ansicpaper
+  \or \bxpr@set@size@a(22,34){in}%     ansidpaper
+  \or \bxpr@set@size@a(34,44){in}%     ansiepaper
+  \or \bxpr@set@size@a(8.5,11){in}%    letterpaper
+  \or \bxpr@set@size@a(8.5,14){in}%    legalpaper
+  \or \bxpr@set@size@a(7.25,10.5){in}% executivepaper
+  \or \bxpr@set@size@a(225,180){mm}%   screen
+  \fi}%
  {% custom page size ('size={<width>,<height>}')
+  \def\bxpr@val@size{#1}\bxpr@needs@reset@sizefalse
   \def\bxpr@tmpa##1,##2,##3\@nil{%
     \begingroup\setbox\z@\hbox{%
       \@tempdima##1\relax \@tempdimb##2\relax
@@ -160,21 +229,36 @@
     \endgroup\bxpr@g@next}%
   \bxpr@tmpa#1,,\@nil
   \let\bxpr@size\bxpr@size@@custom}
-
-%% apply package options
-\edef\bxpr@tmpa{%
-  \noexpand\setkeys{bxpr}{\bxpr@kvopt}%
-}\bxpr@tmpa
+\def\bxpr@set@size@a(#1,#2)#3{%
+  \edef\bxpr@tmpa##1##2{%
+    \ifbxpr@prm@landscape##2\else##1\fi
+    \ifbxpr@prm@truedimen true\fi #3\relax}%
+  \bxpr@dima=\bxpr@tmpa{#1}{#2}\edef\bxpr@cs@width{\the\bxpr@dima}%
+  \bxpr@dima=\bxpr@tmpa{#2}{#1}\edef\bxpr@cs@height{\the\bxpr@dima}%
+  \let\bxpr@size\bxpr@size@@custom}
 
 %--------------------------------------- user interface
 
 %%<*> \bxpapersizesetup{<key>=<value>,...}
 \newcommand*\bxpapersizesetup[1]{%
-  \setkeys{bxpr}{#1}}
+  \setkeys*[bxpr]{prm}{#1}%
+  \ifx\XKV@rm\@empty\else
+    \bxpr@err@ivkey
+  \fi
+  \ifbxpr@needs@reset@size
+    \edef\bxpr@tmpa{%
+      \noexpand\setkeys[bxpr]{prm}{size=\bxpr@val@size}%
+    }\bxpr@tmpa
+  \fi}
 %%<*> \papersizesetup{<key>=<value>,...}
 % Synonym for \bxpapersizesetup, declared only if not yet defined.
 \providecommand*\papersizesetup{%
   \bxpapersizesetup}
+
+%% apply package options
+\edef\bxpr@tmpa{%
+  \noexpand\bxpapersizesetup{\bxpr@kvopt}%
+}\bxpr@tmpa
 
 %--------------------------------------- page hook
 
@@ -200,8 +284,9 @@
 \g@addto@macro\bxpr@begindoc@first@hook{%
   \bxDebug{bxpapersize settings:^^J%
     mode=\the\bxpr@mode^^J%
-    prioity=\the\bxpr@priority^^J%
-    size=\the\bxpr@size}%
+    priority=\the\bxpr@priority^^J%
+    size=\the\bxpr@size(\bxpr@cs@width,\bxpr@cs@height)%
+    \ifnum\bxpr@tombow>\z@ [tombow]\fi}%
   \bxpr@geometry@hack
   \ifcase\bxpr@mode % dvi
     \ifcase\bxpr@priority % low
@@ -304,7 +389,7 @@
 
 %% \bxpr@page@process
 \def\bxpr@page@process{%
-  \ifbxpr@active
+  \ifbxpr@prm@active
     \bxpr@page@process@a
   \fi}
 \def\bxpr@page@process@a{%
@@ -334,7 +419,7 @@
   \begingroup
     \bxpr@csletcs{bxpr@tmpa}{paper#1}%
     \ifnum\bxpr@tombow>\z@
-      \advance\bxpr@tmpa2in\relax
+      \advance\bxpr@tmpa2truein\relax
     \fi
     \bxpr@csletcs{bxpr@tmpb}{stock#1}%
     \ifx\bxpr@tmpb\relax\else \ifdim\bxpr@tmpb>\z@
