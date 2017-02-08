@@ -77,6 +77,13 @@ in effect when this package is loaded without the `size` option key.
 
 ### Usage
 
+Once the package is loaded, the output paper size will be adjusted,
+respecting the settings given by the package options. By default, the
+output papersize will be made identical to the layout paper size.
+
+    % For many cases, it's enough.
+    \usepackage{bxpapersize}
+
 You can change the settings of this package using `\papersizesetup`
 command, invoked as follows:
 
@@ -95,9 +102,20 @@ The available keys are listed below:
       - `real*`: The output should be equal to the layout paper size,
         even if the stock paper size is available.
       - `{<width>,<height>}`: The output should be equal to the
-        specified value.
+        specified values.
+      - `<papersize-name>`: The output should be equal to the given
+        size. The set pf available paper-size names is the same as the
+        [geometry package] and is listed below:  
+        a0paper--a6paper, b0paper--b6paper, c0paper--c6paper, b0j--b6j,
+        ansiapaper--ansiepaper, letterpaper, legalpaper, executivepaper,
+        screen.
+      - `landscape`, `truedimen`: These are used in combination with
+        `<papersize-name>` options, and have the same meaning as in the
+        geometry package.
       - `box`: The output should be the actual size of the TeX box
-        to be shipped out. For advanced users.
+        to be shipped out. It is provided for advanced users.
+
+[geometry package]: https://www.ctan.org/pkg/geometry
 
 Note that, however, what happens about output paper size when some
 settings are changed in the midst of pages differs among TeX engines
@@ -106,13 +124,20 @@ users.
 
 The comamnd `\bxpapersizesetup` is a synonym for `\papersizesetup`,
 so as to cope with command name conflict. Namely, `\papersizesetup`
-will be not (re)defined if the command of that name is always defined,
+will be not (re)defined if the command of that name is already defined,
 but `\bxpapersizesetup` will be always provided.
 
 Revision History
 ----------------
 
-  * Version 0.3  ‹2017/02/05›
+  * Version 0.3  ‹2017/02/08›
+      - As to `size=real`, the stock size becomes taken into account,
+        and the new value `real*` is provided.
+      - Make `nodvidriver` synonym for `disabled`.
+      - Make `\papersizesetup` synonym for `\bxpapersizesetup`.
+      - Add `olddvips`.
+      - Support `size=<papersize-name>`. together with `landscape` and
+        `truedimen`.
   * Version 0.2  ‹2016/03/26›
       - The first public version.
 
