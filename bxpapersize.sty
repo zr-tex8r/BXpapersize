@@ -1,4 +1,12 @@
-% bxpapersize.sty
+%%
+%% This is file 'bxpapersize.sty'.
+%% 
+%% Copyright (c) 2017 Takayuki YATO (aka. "ZR")
+%%   GitHub:   https://github.com/zr-tex8r
+%%   Twitter:  @zr_tex8r
+%%
+%% This package is distributed under the MIT License.
+%%
 
 %% package declaration
 \NeedsTeXFormat{LaTeX2e}
@@ -313,7 +321,7 @@
         \bxpr@page@process
         \bxpr@modify@output@box\relax\bxpr@special@chunk}%
       \AtBeginShipout{\bxpr@every@page@hook}%
-    \or % higih
+    \or % high
       \AtBeginShipoutInit
       \def\bxpr@every@page@hook{%
         \bxpr@page@process
@@ -448,6 +456,12 @@
 
 %--------------------------------------- cope with tate-direction
 
+% In (u)pTeX engine, boxes and lists have the direction attribute,
+% and yoko boxes cannot be unboxed in tate lists (and vice versa).
+% This restriction can cause the atbegshi package to fail, and thus
+% the 'priority=low' setting results in an error when used together
+% with document classes of tate direction.
+
 % if '\tate' is invalid then quit now
 \begingroup\expandafter\expandafter\expandafter\endgroup
 \expandafter\ifx\csname tate\endcsname\relax
@@ -473,6 +487,9 @@
 \fi
 
 %% \bxpr@patch
+% Patches the internal macro \AtBegShi@Output of atbegshi package,
+% so that the macro is prepended by a `\yoko` primitive and appended
+% by a direction primitive to switch back to the original.
 \@onlypreamble\bxpr@patch
 \def\bxpr@patch{%
   \expandafter\bxpr@patch@a\AtBegShi@Output\bxpr@end}

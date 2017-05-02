@@ -103,6 +103,9 @@ The available keys are listed below:
         even if the stock paper size is available.
       - `{<width>,<height>}`: The output should be equal to the
         specified values.
+      - `<width>*<height>`: The alternative form of `{<width>,<height>}`.
+        It is provided because option strings including braces are not
+        permitted in the package option list.
       - `<papersize-name>`: The output should be equal to the given
         size. The set pf available paper-size names is the same as the
         [geometry package] and is listed below:  
@@ -130,6 +133,8 @@ but `\bxpapersizesetup` will be always provided.
 Revision History
 ----------------
 
+  * Version 0.3a ‹2017/05/02›
+      - Support format `size=<width>*<height>`
   * Version 0.3  ‹2017/02/08›
       - As to `size=real`, the stock size becomes taken into account,
         and the new value `real*` is provided.
