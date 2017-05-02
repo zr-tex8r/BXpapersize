@@ -230,7 +230,9 @@
         \def\noexpand\bxpr@cs@width{\the\@tempdima}%
         \def\noexpand\bxpr@cs@height{\the\@tempdimb}}}%
     \endgroup\bxpr@g@next}%
-  \bxpr@tmpa#1,,\@nil
+  \def\bxpr@tmpb{#1}%
+  \bxpr@set@size@star
+  \expandafter\bxpr@tmpa\bxpr@tmpb,,\@nil
   \let\bxpr@size\bxpr@size@@custom}
 \def\bxpr@set@size@a(#1,#2)#3{%
   \edef\bxpr@tmpa##1##2{%
@@ -239,6 +241,10 @@
   \bxpr@dima=\bxpr@tmpa{#1}{#2}\edef\bxpr@cs@width{\the\bxpr@dima}%
   \bxpr@dima=\bxpr@tmpa{#2}{#1}\edef\bxpr@cs@height{\the\bxpr@dima}%
   \let\bxpr@size\bxpr@size@@custom}
+\def\bxpr@set@size@star{%
+  \expandafter\bxpr@set@size@star@a\bxpr@tmpb**\bxpr@end}
+\def\bxpr@set@size@star@a#1*#2*#3\bxpr@end{%
+  \ifx*#2*\else \def\bxpr@tmpb{#1,#2}\fi}
 
 %--------------------------------------- user interface
 
