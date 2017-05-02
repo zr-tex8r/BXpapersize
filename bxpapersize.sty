@@ -2,7 +2,7 @@
 
 %% package declaration
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{bxpapersize}[2017/02/08 v0.3]
+\ProvidesPackage{bxpapersize}[2017/05/02 v0.3a]
 
 %% preparation
 \def\bxpr@pkgname{bxpapersize}
@@ -50,6 +50,9 @@
 %% constants
 \chardef\bxpr@mode@@dvimode=0
 \chardef\bxpr@mode@@pdfmode=1
+
+%% unique tokens
+\def\bxpr@end{\bxpr@end@}
 
 %% \bxpr@pagewidth / \bxpr@pageheight
 %% \bxpr@horigin / \bxpr@vorigin
@@ -140,14 +143,14 @@
 
 %% 'active'
 \define@boolkey+[bxpr]{prm}{active}[true]{}%
- {\bxpr@ivval{active}{#1}}
+ {\bxpr@err@ivval{active}{#1}}
 \bxpr@prm@activetrue
 
 %% 'priority'
 \define@choicekey*+[bxpr]{prm}{priority}%
     {low,middle,default,high}%
  {\bxpr@set@priority{#1}}%
- {\bxpr@ivval{priority}{#1}}
+ {\bxpr@err@ivval{priority}{#1}}
 \def\bxpr@set@priority#1{%
   \bxpr@csletcs{bxpr@priority}{bxpr@priority@@#1}}
 \AtBeginDocument{%
@@ -157,12 +160,12 @@
 %% 'truedimen'
 \define@boolkey+[bxpr]{prm}{truedimen}[true]%
  {\bxpr@needs@reset@sizetrue}%
- {\bxpr@ivval{truedimen}{#1}}
+ {\bxpr@err@ivval{truedimen}{#1}}
 
 %% 'landscape'
 \define@boolkey+[bxpr]{prm}{landscape}[true]%
  {\bxpr@needs@reset@sizetrue}%
- {\bxpr@ivval{landscape}{#1}}
+ {\bxpr@err@ivval{landscape}{#1}}
 
 %% 'size'
 \define@choicekey*+[bxpr]{prm}{size}[\bxpr@tmpa\bxpr@tmpb]%
@@ -436,6 +439,70 @@
   \bxpr@dima\ht\AtBeginShipoutBox
   \advance\bxpr@dima\dp\AtBeginShipoutBox
   \edef\bxpr@height{\the\bxpr@dima}}
+
+%--------------------------------------- cope with tate-direction
+
+% if '\tate' is invalid then quit now
+\begingroup\expandafter\expandafter\expandafter\endgroup
+\expandafter\ifx\csname tate\endcsname\relax
+\expandafter\endinput\fi\relax
+
+% if priority is middle then quit
+\ifnum\bxpr@priority=\bxpr@priority@@default
+\expandafter\endinput\fi\relax
+
+% check in advance
+\ifx\AtBegShi@Output\@undefined
+  \PackageWarningNoLine\bxpr@pkgname
+   {The patch to atbegshi failed, so\MessageBreak
+    the package might not work well}
+\expandafter\endinput\fi\relax
+
+%% \ifbxpr@ddir
+\begingroup\expandafter\expandafter\expandafter\endgroup
+\expandafter\ifx\csname ifddir\endcsname\relax
+  \bxpr@csletcs{ifbxpr@ddir}{iffalse}
+\else
+  \bxpr@csletcs{ifbxpr@ddir}{ifddir}
+\fi
+
+%% \bxpr@patch
+\@onlypreamble\bxpr@patch
+\def\bxpr@patch{%
+  \expandafter\bxpr@patch@a\AtBegShi@Output\bxpr@end}
+\@onlypreamble\bxpr@patch@a
+\def\bxpr@patch@a{%
+  \futurelet\bxpr@tok\bxpr@patch@b}
+\@onlypreamble\bxpr@patch@b
+\def\bxpr@patch@b{%
+  \ifx\bxpr@tok\egroup \expandafter\@firstoftwo
+  \else \expandafter\@secondoftwo
+  \fi{\bxpr@patch@c}{\bxpr@patch@d{}}}
+\@onlypreamble\bxpr@patch@c
+\def\bxpr@patch@c#1#2{%
+  \bxpr@patch@d{#1#2}}
+\@onlypreamble\bxpr@patch@d
+\def\bxpr@patch@d#1#2\bxpr@end{%
+  \def\AtBegShi@Output{#1\bxpr@ABS@prehook#2\bxpr@ABS@posthook}}
+% do patch
+\bxpr@patch
+
+%% \bxpr@restore@dir
+\let\bxpr@restore@dir\relax
+
+%% \bxpr@ABS@prehook
+\def\bxpr@ABS@prehook{%
+  \iftdir \yoko \let\bxpr@restore@dir\tate
+  \else\ifbxpr@ddir \yoko \let\bxpr@restore@dir\dtou
+  \else \let\bxpr@restore@dir\relax
+  \fi\fi
+  \ifx\bxpr@restore@dir\relax\else
+    \bxDebug{Temporarily switching \meaning\bxpr@restore@dir
+        \space to \string\yoko}%
+  \fi}
+%% \bxpr@ABS@posthook
+\def\bxpr@ABS@posthook{%
+  \bxpr@restore@dir}
 
 %--------------------------------------- all done
 \endinput
