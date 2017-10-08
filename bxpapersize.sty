@@ -170,6 +170,11 @@
   \def\bxpr@set@priority#1{% invalidate
     \bxpr@err@nlprm{priority}}}
 
+%% 'adjustmag'
+\define@boolkey+[bxpr]{prm}{adjustmag}[true]%
+ {}%
+ {\bxpr@err@ivval{adjustmag}{#1}}
+
 %% 'truedimen'
 \define@boolkey+[bxpr]{prm}{truedimen}[true]%
  {\bxpr@needs@reset@sizetrue}%
@@ -394,7 +399,12 @@
     \edef\bxpr@special@chunk{\special{papersize=\bxpr@tmpb}}}%
 \else %pdf
   \def\bxpr@set@page@size#1#2{%
-    \bxpr@pagewidth=#1\relax \bxpr@pageheight=#2\relax
+    \let\bxpr@tmpb\@empty
+    \ifbxpr@prm@adjustmag
+      \bxpr@let@real@mag@to\bxpr@tmpb
+    \fi
+    \bxpr@pagewidth=#1\relax \bxpr@pagewidth=\bxpr@tmpb\bxpr@pagewidth
+    \bxpr@pageheight=#2\relax \bxpr@pageheight=\bxpr@tmpb\bxpr@pageheight
     \bxDebug{papersize=\the\bxpr@pagewidth,\the\bxpr@pageheight}}%
 \fi
 
