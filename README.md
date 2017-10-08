@@ -133,6 +133,9 @@ but `\bxpapersizesetup` will be always provided.
 Revision History
 ----------------
 
+  * Version 0.3b ‹2017/10/08›
+      - Support pTeX-ng (ApTeX) engine properly.
+      - (Experimental) Add `adjustmag` option.
   * Version 0.3a ‹2017/05/02›
       - Support format `size=<width>*<height>`
   * Version 0.3  ‹2017/02/08›
