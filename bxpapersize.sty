@@ -62,6 +62,11 @@
 %% unique tokens
 \def\bxpr@end{\bxpr@end@}
 
+%% \bxpr@ptexng
+\chardef\bxpr@ptexng=0
+\edef\bxpr@tmpa{\string\ngbanner}\edef\bxpr@tmpb{\meaning\ngbanner}
+\ifx\bxpr@tmpa\bxpr@tmpb \chardef\bxpr@ptexng=1 \fi
+
 %% \bxpr@pagewidth / \bxpr@pageheight
 %% \bxpr@horigin / \bxpr@vorigin
 \ifluatex           % LuaTeX
@@ -84,7 +89,7 @@
 \else\ifvtex        % VTeX
   \let\bxpr@pagewidth\mediawidth
   \let\bxpr@pageheight\mediaheight
-\else\ifpdf         % pdfTeX in PDF mode
+\else\ifnum0\the\bxpr@ptexng\ifpdf1\fi>0 % pdfTeX in PDF mode
   \let\bxpr@pagewidth\pdfpagewidth
   \let\bxpr@pageheight\pdfpageheight
   \let\bxpr@horigin\pdfhorigin
