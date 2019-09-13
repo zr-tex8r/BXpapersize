@@ -59,6 +59,7 @@ The available options are described hereafter.
       - `low`: Priotizes specials by others.
       - `middle`/`default` (default): Does not care about priority.
       - `high`: Priotizes specials by this package.
+    Note: The priority setting will be ignored in PDF mode.
   * `olddvips`: Must be specified when you use dvips older than that
     included in TeX Live 2017, so as to make the `priority` option
     work correctly.

@@ -10,7 +10,7 @@
 
 %% package declaration
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{bxpapersize}[2017/10/08 v0.3b]
+\ProvidesPackage{bxpapersize}[2019/09/13 v0.4-pre]
 
 %% preparation
 \def\bxpr@pkgname{bxpapersize}
@@ -48,12 +48,13 @@
 %% load packages
 \RequirePackage{xkeyval}[2008/08/10]% v2.6
 \RequirePackage{atbegshi}
-\RequirePackage{ifpdf,ifxetex,ifluatex,ifvtex}
+\RequirePackage{ifpdf,ifxetex,ifluatex,ifvtex,ifptex}
 
 %% variables
 \newdimen\bxpr@dima
 \let\bxpr@width\relax
 \let\bxpr@height\relax
+\newif\ifbxpr@pxatbegshi
 
 %% constants
 \chardef\bxpr@mode@@dvimode=0
@@ -287,6 +288,18 @@
   \noexpand\bxpapersizesetup{\bxpr@kvopt}%
 }\bxpr@tmpa
 
+% if priority is not middle...
+\ifnum\bxpr@priority=\bxpr@priority@@default\else
+  \ifcase\bxpr@mode % dvi
+    \ifptex
+      \RequirePackage{pxatbegshi}[]
+    \fi
+  \or % pdf
+    \PackageWarningNoLine\bxpr@pkgname
+     {The priority setting will be ignored in PDF mdoe}
+  \fi
+\fi
+
 %--------------------------------------- page hook
 
 %% \bxpr@begindoc@first@hook
@@ -468,79 +481,6 @@
   \bxpr@dima\ht\AtBeginShipoutBox
   \advance\bxpr@dima\dp\AtBeginShipoutBox
   \edef\bxpr@height{\the\bxpr@dima}}
-
-%--------------------------------------- cope with tate-direction
-
-% In (u)pTeX engine, boxes and lists have the direction attribute,
-% and yoko boxes cannot be unboxed in tate lists (and vice versa).
-% This restriction can cause the atbegshi package to fail, and thus
-% the 'priority=low' setting results in an error when used together
-% with document classes of tate direction.
-
-% if '\tate' is invalid then quit now
-\begingroup\expandafter\expandafter\expandafter\endgroup
-\expandafter\ifx\csname tate\endcsname\relax
-\expandafter\endinput\fi\relax
-
-% if priority is middle then quit
-\ifnum\bxpr@priority=\bxpr@priority@@default
-\expandafter\endinput\fi\relax
-
-% check in advance
-\ifx\AtBegShi@Output\@undefined
-  \PackageWarningNoLine\bxpr@pkgname
-   {The patch to atbegshi failed, so\MessageBreak
-    the package might not work well}
-\expandafter\endinput\fi\relax
-
-%% \ifbxpr@ddir
-\begingroup\expandafter\expandafter\expandafter\endgroup
-\expandafter\ifx\csname ifddir\endcsname\relax
-  \bxpr@csletcs{ifbxpr@ddir}{iffalse}
-\else
-  \bxpr@csletcs{ifbxpr@ddir}{ifddir}
-\fi
-
-%% \bxpr@patch
-% Patches the internal macro \AtBegShi@Output of atbegshi package,
-% so that the macro is prepended by a `\yoko` primitive and appended
-% by a direction primitive to switch back to the original.
-\@onlypreamble\bxpr@patch
-\def\bxpr@patch{%
-  \expandafter\bxpr@patch@a\AtBegShi@Output\bxpr@end}
-\@onlypreamble\bxpr@patch@a
-\def\bxpr@patch@a{%
-  \futurelet\bxpr@tok\bxpr@patch@b}
-\@onlypreamble\bxpr@patch@b
-\def\bxpr@patch@b{%
-  \ifx\bxpr@tok\egroup \expandafter\@firstoftwo
-  \else \expandafter\@secondoftwo
-  \fi{\bxpr@patch@c}{\bxpr@patch@d{}}}
-\@onlypreamble\bxpr@patch@c
-\def\bxpr@patch@c#1#2{%
-  \bxpr@patch@d{#1#2}}
-\@onlypreamble\bxpr@patch@d
-\def\bxpr@patch@d#1#2\bxpr@end{%
-  \def\AtBegShi@Output{#1\bxpr@ABS@prehook#2\bxpr@ABS@posthook}}
-% do patch
-\bxpr@patch
-
-%% \bxpr@restore@dir
-\let\bxpr@restore@dir\relax
-
-%% \bxpr@ABS@prehook
-\def\bxpr@ABS@prehook{%
-  \iftdir \yoko \let\bxpr@restore@dir\tate
-  \else\ifbxpr@ddir \yoko \let\bxpr@restore@dir\dtou
-  \else \let\bxpr@restore@dir\relax
-  \fi\fi
-  \ifx\bxpr@restore@dir\relax\else
-    \bxDebug{Temporarily switching \meaning\bxpr@restore@dir
-        \space to \string\yoko}%
-  \fi}
-%% \bxpr@ABS@posthook
-\def\bxpr@ABS@posthook{%
-  \bxpr@restore@dir}
 
 %--------------------------------------- all done
 \endinput
