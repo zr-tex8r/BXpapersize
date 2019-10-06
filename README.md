@@ -24,6 +24,7 @@ should have higher or lower priority over the settings made by others.
       - ifpdf, ifxetex, ifluatex, ifvtex
       - xkeyval
       - atbegshi
+      - pxatbegshi (when priority setting is used on (u)pTeX)
 
 ### Installation
 
@@ -134,6 +135,9 @@ but `\bxpapersizesetup` will be always provided.
 Revision History
 ----------------
 
+  * Version 0.4  ‹2019/10/05›
+      - Load pxatbegshi to properly handle pTeX tate mode.
+      - Remove (experimental) `adjustmag` option.
   * Version 0.3b ‹2017/10/08›
       - Support pTeX-ng (ApTeX) engine properly.
       - (Experimental) Add `adjustmag` option.
