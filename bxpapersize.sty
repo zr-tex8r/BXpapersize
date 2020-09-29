@@ -63,6 +63,15 @@
 %% unique tokens
 \def\bxpr@end{\bxpr@end@}
 
+%% switch 'bxpr@new@hook@system'
+% Whether the new hook management system is present.
+\newif\ifbxpr@new@hook@system
+\ifx\AddToHook\@undefined\else
+  \PackageInfo\bxpr@pkgname
+   {Detected the new LaTeX kernel (2020-10-01)\@gobble}
+  \bxpr@new@hook@systemtrue
+\fi
+
 %% \bxpr@pagewidth / \bxpr@pageheight
 %% \bxpr@horigin / \bxpr@vorigin
 \ifluatex           % LuaTeX
@@ -280,6 +289,15 @@
 
 % if priority is not middle...
 \ifnum\bxpr@priority=\bxpr@priority@@default\else
+\ifbxpr@new@hook@system %----
+  \PackageWarningNoLine\bxpr@pkgname
+   {!!!!!!!!!! WARNING !!!!!!!!!!\MessageBreak
+    You use the new LaTeX kernel (2020-10-01)!\MessageBreak
+    Unfortunately, priority setting is not yet\MessageBreak
+    available on the new kernel, and thus\MessageBreak
+    will be ignored}
+  \let\bxpr@priority\bxpr@priority@@default
+\else %----
   \ifcase\bxpr@mode % dvi
     \ifptex
       \RequirePackage{pxatbegshi}[]
@@ -288,6 +306,7 @@
     \PackageWarningNoLine\bxpr@pkgname
      {The priority setting will be ignored in PDF mdoe}
   \fi
+\fi %----
 \fi
 
 %--------------------------------------- page hook
@@ -296,19 +315,27 @@
 % Placed at the head of the begin-docuemnt hook.
 \@onlypreamble\bxpr@begindoc@first@hook
 \let\bxpr@begindoc@first@hook\@empty
+\ifbxpr@new@hook@system %----
+\AddToHook{begindocument/before}{\bxpr@begindoc@first@hook}
+\else %----
 \begingroup
   \toks@\expandafter{\@begindocumenthook}
   \xdef\@begindocumenthook{%
     \noexpand\bxpr@begindoc@first@hook
     \the\toks@}
 \endgroup
+\fi %----
 
 %% \bxpr@begindoc@last@hook
 % Placed after the begin-docuemnt hook.
 \def\bxpr@begindoc@last@hook{%
   \let\bxpr@begindoc@last@hook\@undefined}
+\ifbxpr@new@hook@system %----
+\AddToHook{begindocument/end}{\bxpr@begindoc@last@hook}
+\else %----
 \g@addto@macro\document{%
   \bxpr@begindoc@last@hook}
+\fi %----
 
 %% add hook for every page
 \g@addto@macro\bxpr@begindoc@first@hook{%
