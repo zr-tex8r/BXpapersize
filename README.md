@@ -53,6 +53,9 @@ The available options are described hereafter.
 
 #### Priority
 
+**Important**: The `priority` option is not (yet) supported under the
+new LaTeX kernel 2020-10-01.
+
   * `priority=<value>`: In DVI mode, this decides the priority of the
     ‘papersize’ specials issued by this package relative to the
     ‘papersize’ specials issued by others.
@@ -135,6 +138,9 @@ but `\bxpapersizesetup` will be always provided.
 Revision History
 ----------------
 
+  * Version 0.5  ‹2020/10/01›
+      - Support LaTeX kernel 2020/10/01.
+        (But priority setting is not yet supported.)
   * Version 0.4  ‹2019/10/05›
       - Load pxatbegshi to properly handle pTeX tate mode.
       - Remove (experimental) `adjustmag` option.
