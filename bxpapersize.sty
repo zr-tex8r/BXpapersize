@@ -20,15 +20,22 @@
 
 % Note: Only non-key-value global options should be picked.
 
-%% 'disabled' / 'nodvidriver'
+%% driver options (or 'disabled')
 \chardef\bxpr@disabled=0
 \DeclareOption{disabled}{%
   \chardef\bxpr@disabled=1 }
 \DeclareOption{nodvidriver}{%
   \chardef\bxpr@disabled=1 }
+\DeclareOption{autodvidriver}{%
+  \chardef\bxpr@disabled=0 }
+\DeclareOption{dvips}{%
+  \chardef\bxpr@disabled=0 }
+\DeclareOption{dvipdfmx}{%
+  \chardef\bxpr@disabled=0 }
 %% 'olddvips'
 \chardef\bxpr@olddvips=0
 \DeclareOption{olddvips}{%
+  \chardef\bxpr@disabled=0
   \chardef\bxpr@olddvips=1 }
 %% keyval
 \@onlypreamble\bxpr@kvopt
@@ -47,21 +54,24 @@
 
 %% load packages
 \RequirePackage{xkeyval}[2008/08/10]% v2.6
-\RequirePackage{atbegshi}
 \RequirePackage{ifpdf,ifxetex,ifluatex,ifvtex,ifptex}
 
 %% variables
 \newdimen\bxpr@dima
 \let\bxpr@width\relax
 \let\bxpr@height\relax
-\newif\ifbxpr@pxatbegshi
 
 %% constants
-\chardef\bxpr@mode@@dvimode=0
-\chardef\bxpr@mode@@pdfmode=1
+\chardef\bxpr@mode@@papersize=0 % papersize special
+\chardef\bxpr@mode@@pdfmode=1 % PDF-mode primitive
+\chardef\bxpr@mode@@void=2 % no operation
 
 %% unique tokens
 \def\bxpr@end{\bxpr@end@}
+
+%% switch 'bxpr@nosize'
+\newif\ifbxpr@nosize
+\ifx\ifhint\iftrue \bxpr@nosizetrue \fi
 
 %% switch 'bxpr@new@hook@system'
 % Whether the new hook management system is present.
@@ -106,15 +116,22 @@
 \fi
 
 %% \bxpr@mode
-\ifx\bxpr@pagewidth\@undefined
-  \let\bxpr@mode\bxpr@mode@@dvimode
+\ifbxpr@nosize
+  \let\bxpr@mode\bxpr@mode@@void
+\else\ifx\bxpr@pagewidth\@undefined
+  \let\bxpr@mode\bxpr@mode@@papersize
 \else
   \let\bxpr@mode\bxpr@mode@@pdfmode
-\fi
+\fi\fi
 
 %% \bxpr@csletcs{<CSa>}{<CSb>}
 \def\bxpr@csletcs#1#2{%
   \expandafter\let\csname#1\expandafter\endcsname\csname#2\endcsname}
+
+%% load 'atbegshi' package
+\ifnum\bxpr@mode=\bxpr@mode@@void\else
+  \RequirePackage{atbegshi}\relax
+\fi
 
 %--------------------------------------- parameters
 
@@ -298,7 +315,7 @@
     will be ignored}
   \let\bxpr@priority\bxpr@priority@@default
 \else %----
-  \ifcase\bxpr@mode % dvi
+  \ifcase\bxpr@mode % papersize
     \ifptex
       \RequirePackage{pxatbegshi}[]
     \fi
@@ -345,7 +362,7 @@
     size=\the\bxpr@size(\bxpr@cs@width,\bxpr@cs@height)%
     \ifnum\bxpr@tombow>\z@ [tombow]\fi}%
   \bxpr@geometry@hack
-  \ifcase\bxpr@mode % dvi
+  \ifcase\bxpr@mode % papersize
     \ifcase\bxpr@priority % low
       \AtBeginShipoutInit
       \def\bxpr@every@page@hook{%
@@ -369,7 +386,7 @@
         \AtBeginShipoutNext{\bxpr@every@page@hook}}%
       \AtBeginShipoutNext{\bxpr@every@page@hook}%
     \fi
-  \else % pdf
+  \or % pdf
     \def\bxpr@every@page@hook{%
       \bxpr@page@process
       \bxpr@modify@output@box\relax\bxpr@special@chunk}%
@@ -416,7 +433,7 @@
 \let\bxpr@special@chunk\@empty
 
 %% \bxpr@set@page@size{<width>}{<height>}
-\ifcase\bxpr@mode %dvi
+\ifcase\bxpr@mode % dvi
   \def\bxpr@set@page@size#1#2{%
     \begingroup
       \bxpr@let@real@mag@to\bxpr@tmpa
@@ -427,10 +444,13 @@
     \endgroup \bxpr@g@next
     \bxDebug{papersize=\bxpr@tmpb}%
     \edef\bxpr@special@chunk{\special{papersize=\bxpr@tmpb}}}%
-\else %pdf
+\or % pdf
   \def\bxpr@set@page@size#1#2{%
     \bxpr@pagewidth=#1\relax \bxpr@pageheight=#2\relax
     \bxDebug{papersize=\the\bxpr@pagewidth,\the\bxpr@pageheight}}%
+\else % void
+  \def\bxpr@set@page@size#1#2{%
+    \bxDebug{papersize ignored}}
 \fi
 
 %% \bxpr@let@real@mag@to\CS
