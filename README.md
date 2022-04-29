@@ -24,7 +24,7 @@ should have higher or lower priority over the settings made by others.
       - ifpdf, ifxetex, ifluatex, ifvtex
       - xkeyval
       - atbegshi
-      - pxatbegshi (when priority setting is used on (u)pTeX)
+      - pxatbegshi: on (u)pLaTeX
 
 ### Installation
 
@@ -33,6 +33,7 @@ should have higher or lower priority over the settings made by others.
 ### License
 
 This package is distributed under the MIT License.
+
 
 The bxpapersize Package
 -----------------------
@@ -50,6 +51,8 @@ The available options are described hereafter.
     the bxpapersize package. Note that once `disabled` is used there
     is no way to enable the functionality.
   * `nodvidriver`: A synonym for `disabled`.
+  * `autodvidriver`: Negation of `disabled`/`nodvidriver`.  
+    Note: Options `dvips` and `dvipdfmx` also negate `disabled`.
 
 #### Priority
 
@@ -92,7 +95,7 @@ output papersize will be made identical to the layout paper size.
 You can change the settings of this package using `\papersizesetup`
 command, invoked as follows:
 
-    \bxpapersizesetup[<key>=<value>,...]
+    \papersizesetup[<key>=<value>,...]
 
 The available keys are listed below:
 
@@ -112,7 +115,7 @@ The available keys are listed below:
         It is provided because option strings including braces are not
         permitted in the package option list.
       - `<papersize-name>`: The output should be equal to the given
-        size. The set pf available paper-size names is the same as the
+        size. The set of available paper-size names is the same as in the
         [geometry package] and is listed below:  
         a0paper--a6paper, b0paper--b6paper, c0paper--c6paper, b0j--b6j,
         ansiapaper--ansiepaper, letterpaper, legalpaper, executivepaper,
@@ -135,9 +138,13 @@ so as to cope with command name conflict. Namely, `\papersizesetup`
 will be not (re)defined if the command of that name is already defined,
 but `\bxpapersizesetup` will be always provided.
 
+
 Revision History
 ----------------
 
+  * Version 0.6  ‹2022/04/28›
+      - Add `autodvidriver` option.
+      - Rearrange spec on driver options.
   * Version 0.5  ‹2020/10/01›
       - Support LaTeX kernel 2020/10/01.
         (But priority setting is not yet supported.)
