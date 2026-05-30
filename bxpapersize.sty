@@ -37,6 +37,10 @@
 \DeclareOption{olddvips}{%
   \chardef\bxpr@disabled=0
   \chardef\bxpr@olddvips=1 }
+%% '@sizeless' (for debug)
+\chardef\bxpr@sizeless=0
+\DeclareOption{@sizeless}{%
+  \chardef\bxpr@sizeless=1 }
 %% keyval
 \@onlypreamble\bxpr@kvopt
 \let\bxpr@kvopt\@empty % key-value option list
@@ -85,8 +89,7 @@
   \bxpr@new@hook@systemtrue
 \fi
 
-%% \bxpr@sizeless
-\chardef\bxpr@sizeless=0
+%% Adjust \bxpr@sizeless
 \ifx\ifhint\iftrue \chardef\bxpr@sizeless=1 \fi
 
 %% \bxpr@pagewidth / \bxpr@pageheight
