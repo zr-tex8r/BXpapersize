@@ -101,6 +101,15 @@
   \bxpr@new@hook@systemtrue
 \fi
 
+%% 'olddvips' cannot go with new hook system
+\ifbxpr@new@hook@system \ifnum\bxpr@olddvips>\z@
+  \PackageError\bxpr@pkgname
+   {Option 'olddvips' is invalid on the new\MessageBreak
+    LaTeX kernel}
+   {\@ehc}
+  \chardef\bxpr@olddvips=0
+\fi\fi
+
 %% Adjust \bxpr@sizeless
 \ifx\ifhint\iftrue \chardef\bxpr@sizeless=1 \fi
 
@@ -330,24 +339,22 @@
   \RequirePackage{pxatbegshi}[]
 \fi\fi\fi
 
-% if priority is not middle...
-\ifnum\bxpr@priority=\bxpr@priority@@default\else
-\ifbxpr@new@hook@system %----
+% check if priority 'low' is supported
+\ifnum\bxpr@priority=\bxpr@priority@@low
+  \ifnum\bxpr@mode=\bxpr@mode@@pdfmode
+    \PackageWarningNoLine\bxpr@pkgname
+     {The setting 'priority=low' is not supported\MessageBreak
+       in PDF mdoe}
+    \let\bxpr@priority\bxpr@priority@@default
+  \else\ifbxpr@new@hook@system
   \PackageWarningNoLine\bxpr@pkgname
    {!!!!!!!!!! WARNING !!!!!!!!!!\MessageBreak
     You use the new LaTeX kernel (2020-10-01)!\MessageBreak
-    Unfortunately, priority setting is not yet\MessageBreak
-    available on the new kernel, and thus\MessageBreak
+    Unfortunately, setting 'priority=low' is\MessageBreak
+    not supported on the new kernel, and thus\MessageBreak
     will be ignored}
   \let\bxpr@priority\bxpr@priority@@default
-\else %----
-  \ifcase\bxpr@mode % void (no-op)
-  \or % papersize
-  \or % pdf
-    \PackageWarningNoLine\bxpr@pkgname
-     {The priority setting will be ignored in PDF mdoe}
-  \fi
-\fi %----
+  \fi\fi
 \fi
 
 %--------------------------------------- page hook
@@ -411,9 +418,18 @@
       \AtBeginShipoutNext{\bxpr@every@page@hook}%
     \fi
   \or % pdf
-    \def\bxpr@every@page@hook{%
-      \bxpr@page@process}%
-    \AtBeginShipout{\bxpr@every@page@hook}%
+    \ifcase\bxpr@priority % low (unsupported)
+    \or % default
+      \def\bxpr@every@page@hook{%
+        \bxpr@page@process}%
+      \AtBeginShipout{\bxpr@every@page@hook}%
+    \or % high
+      \AtBeginShipoutInit
+      \def\bxpr@every@page@hook{%
+        \bxpr@page@process
+        \AtBeginShipoutNext{\bxpr@every@page@hook}}%
+      \AtBeginShipoutNext{\bxpr@every@page@hook}%
+    \fi
   \fi}
 
 %% \bxpr@tombow
