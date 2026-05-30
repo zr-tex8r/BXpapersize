@@ -57,21 +57,24 @@
 \RequirePackage{ifpdf,ifxetex,ifluatex,ifvtex,ifptex}
 
 %% variables
+\newif\ifbxpr@ok
 \newdimen\bxpr@dima
 \let\bxpr@width\relax
 \let\bxpr@height\relax
 
 %% constants
-\chardef\bxpr@mode@@papersize=0 % papersize special
-\chardef\bxpr@mode@@pdfmode=1 % PDF-mode primitive
-\chardef\bxpr@mode@@void=2 % no operation
+\chardef\bxpr@mode@@void=0 % no operation
+\chardef\bxpr@mode@@papersize=1 % papersize special
+\chardef\bxpr@mode@@pdfmode=2 % PDF-mode primitive
 
 %% unique tokens
 \def\bxpr@end{\bxpr@end@}
 
-%% switch 'bxpr@nosize'
-\newif\ifbxpr@nosize
-\ifx\ifhint\iftrue \bxpr@nosizetrue \fi
+%% \bxpr@csletcs{<CSa>}{<CSb>}
+\def\bxpr@csletcs#1#2{%
+  \expandafter\let\csname#1\expandafter\endcsname\csname#2\endcsname}
+
+%--------------------------------------- environment
 
 %% switch 'bxpr@new@hook@system'
 % Whether the new hook management system is present.
@@ -81,6 +84,10 @@
    {Detected the new LaTeX kernel (2020-10-01)\@gobble}
   \bxpr@new@hook@systemtrue
 \fi
+
+%% \bxpr@sizeless
+\chardef\bxpr@sizeless=0
+\ifx\ifhint\iftrue \chardef\bxpr@sizeless=1 \fi
 
 %% \bxpr@pagewidth / \bxpr@pageheight
 %% \bxpr@horigin / \bxpr@vorigin
@@ -116,17 +123,13 @@
 \fi
 
 %% \bxpr@mode
-\ifbxpr@nosize
+\ifnum\bxpr@sizeless>\z@
   \let\bxpr@mode\bxpr@mode@@void
 \else\ifx\bxpr@pagewidth\@undefined
   \let\bxpr@mode\bxpr@mode@@papersize
 \else
   \let\bxpr@mode\bxpr@mode@@pdfmode
 \fi\fi
-
-%% \bxpr@csletcs{<CSa>}{<CSb>}
-\def\bxpr@csletcs#1#2{%
-  \expandafter\let\csname#1\expandafter\endcsname\csname#2\endcsname}
 
 %% load 'atbegshi' package
 \ifnum\bxpr@mode=\bxpr@mode@@void\else
@@ -258,16 +261,7 @@
   \fi}%
  {% custom page size ('size={<width>,<height>}')
   \def\bxpr@val@size{#1}\bxpr@needs@reset@sizefalse
-  \def\bxpr@tmpa##1,##2,##3\@nil{%
-    \begingroup\setbox\z@\hbox{%
-      \@tempdima##1\relax \@tempdimb##2\relax
-      \xdef\bxpr@g@next{%
-        \def\noexpand\bxpr@cs@width{\the\@tempdima}%
-        \def\noexpand\bxpr@cs@height{\the\@tempdimb}}}%
-    \endgroup\bxpr@g@next}%
-  \def\bxpr@tmpb{#1}%
-  \bxpr@set@size@star
-  \expandafter\bxpr@tmpa\bxpr@tmpb,,\@nil
+  \bxpr@set@custom@size{#1}%
   \let\bxpr@size\bxpr@size@@custom}
 \def\bxpr@set@size@a(#1,#2)#3{%
   \edef\bxpr@tmpa##1##2{%
@@ -276,10 +270,21 @@
   \bxpr@dima=\bxpr@tmpa{#1}{#2}\edef\bxpr@cs@width{\the\bxpr@dima}%
   \bxpr@dima=\bxpr@tmpa{#2}{#1}\edef\bxpr@cs@height{\the\bxpr@dima}%
   \let\bxpr@size\bxpr@size@@custom}
-\def\bxpr@set@size@star{%
-  \expandafter\bxpr@set@size@star@a\bxpr@tmpb**\bxpr@end}
-\def\bxpr@set@size@star@a#1*#2*#3\bxpr@end{%
+
+%% \bxpr@set@custom@size{<value>}
+\def\bxpr@set@custom@size#1{%
+  \def\bxpr@tmpb{#1}%
+  \expandafter\bxpr@set@custom@size@a\bxpr@tmpb**\bxpr@end
+  \expandafter\bxpr@set@custom@size@b\bxpr@tmpb,,\bxpr@end}
+\def\bxpr@set@custom@size@a#1*#2*#3\bxpr@end{%
   \ifx*#2*\else \def\bxpr@tmpb{#1,#2}\fi}
+\def\bxpr@set@custom@size@b#1,#2,#3\bxpr@end{%
+  \begingroup\setbox\z@\hbox{%
+    \@tempdima#1\relax \@tempdimb#2\relax
+    \xdef\bxpr@g@next{%
+      \def\noexpand\bxpr@cs@width{\the\@tempdima}%
+      \def\noexpand\bxpr@cs@height{\the\@tempdimb}}}%
+  \endgroup\bxpr@g@next}
 
 %--------------------------------------- user interface
 
@@ -304,6 +309,12 @@
   \noexpand\bxpapersizesetup{\bxpr@kvopt}%
 }\bxpr@tmpa
 
+% load 'pxatbegshi' if necessary
+\ifptex \ifbxpr@new@hook@system\else
+    \ifnum\bxpr@priority=\bxpr@priority@@default\else
+  \RequirePackage{pxatbegshi}[]
+\fi\fi\fi
+
 % if priority is not middle...
 \ifnum\bxpr@priority=\bxpr@priority@@default\else
 \ifbxpr@new@hook@system %----
@@ -315,10 +326,8 @@
     will be ignored}
   \let\bxpr@priority\bxpr@priority@@default
 \else %----
-  \ifcase\bxpr@mode % papersize
-    \ifptex
-      \RequirePackage{pxatbegshi}[]
-    \fi
+  \ifcase\bxpr@mode % void (no-op)
+  \or % papersize
   \or % pdf
     \PackageWarningNoLine\bxpr@pkgname
      {The priority setting will be ignored in PDF mdoe}
@@ -354,15 +363,15 @@
   \bxpr@begindoc@last@hook}
 \fi %----
 
+%% \bxpr@every@page@hook
+\let\bxpr@every@page@hook\relax
+
 %% add hook for every page
 \g@addto@macro\bxpr@begindoc@first@hook{%
-  \bxDebug{bxpapersize settings:^^J%
-    mode=\the\bxpr@mode^^J%
-    priority=\the\bxpr@priority^^J%
-    size=\the\bxpr@size(\bxpr@cs@width,\bxpr@cs@height)%
-    \ifnum\bxpr@tombow>\z@ [tombow]\fi}%
+  \bxpr@debug@show@setting
   \bxpr@geometry@hack
-  \ifcase\bxpr@mode % papersize
+  \ifcase\bxpr@mode % void (no-op)
+  \or % papersize
     \ifcase\bxpr@priority % low
       \AtBeginShipoutInit
       \def\bxpr@every@page@hook{%
@@ -388,8 +397,7 @@
     \fi
   \or % pdf
     \def\bxpr@every@page@hook{%
-      \bxpr@page@process
-      \bxpr@modify@output@box\relax\bxpr@special@chunk}%
+      \bxpr@page@process}%
     \AtBeginShipout{\bxpr@every@page@hook}%
   \fi}
 
@@ -404,6 +412,20 @@
 \def\bxpr@modify@output@box#1#2{%
   \setbox\AtBeginShipoutBox\vbox{%
     #1\box\AtBeginShipoutBox#2}}
+
+%% \bxpr@debug@show@setting
+\@onlypreamble\bxpr@debug@show@setting
+\ifx\bxUseDebug\@undefined
+\let\bxpr@debug@show@setting\relax
+\else
+\def\bxpr@debug@show@setting{%
+  \bxDebug{bxpapersize settings:^^J%
+    mode=\the\bxpr@mode^^J%
+    priority=\the\bxpr@priority^^J%
+    size=\the\bxpr@size(\bxpr@cs@width,\bxpr@cs@height)%
+    \ifnum\bxpr@tombow>\z@ [tombow]\fi}}
+\fi
+
 
 %--------------------------------------- geometry hack
 
@@ -433,7 +455,10 @@
 \let\bxpr@special@chunk\@empty
 
 %% \bxpr@set@page@size{<width>}{<height>}
-\ifcase\bxpr@mode % dvi
+\ifcase\bxpr@mode % void
+  \def\bxpr@set@page@size#1#2{%
+    \bxDebug{papersize ignored}}
+\or % papersize
   \def\bxpr@set@page@size#1#2{%
     \begingroup
       \bxpr@let@real@mag@to\bxpr@tmpa
@@ -444,13 +469,10 @@
     \endgroup \bxpr@g@next
     \bxDebug{papersize=\bxpr@tmpb}%
     \edef\bxpr@special@chunk{\special{papersize=\bxpr@tmpb}}}%
-\or % pdf
+\or % pdfmode
   \def\bxpr@set@page@size#1#2{%
     \bxpr@pagewidth=#1\relax \bxpr@pageheight=#2\relax
     \bxDebug{papersize=\the\bxpr@pagewidth,\the\bxpr@pageheight}}%
-\else % void
-  \def\bxpr@set@page@size#1#2{%
-    \bxDebug{papersize ignored}}
 \fi
 
 %% \bxpr@let@real@mag@to\CS
