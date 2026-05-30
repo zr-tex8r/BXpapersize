@@ -44,20 +44,28 @@ The bxpapersize Package
 
 The available options are described hereafter.
 
-#### Annihilation
+#### Driver options
 
-  * `disabled`: Disables all functionality of this package. It may be
-    useful to resolve conflict caused by some packages depending on
-    the bxpapersize package. Note that once `disabled` is used there
-    is no way to enable the functionality.
-  * `nodvidriver`: A synonym for `disabled`.
-  * `autodvidriver`: Negation of `disabled`/`nodvidriver`.  
-    Note: Options `dvips` and `dvipdfmx` also negate `disabled`.
+On DVI output mode, this package realizes its functionality by using
+the DVI driver feature called “papersize special”, which is supported
+by most DVI drivers. Thus this package does not need driver options.
+
+But sometimes disabling the functionality of this package may be useful
+to resolve conflict caused by some packages depending on this package.
+For this reason, this package offers the (pseudo) driver option called
+`nodvidriver`, which disables all functionality. Note that once this
+option is applied when loading this package, there is no way to reenable
+the functionality afterward.
+
+  * `nodvidriver`: Disables the functionality of this package, even if
+    the engine is in PDF output mode.
+  * `disabled` (DEPRECATED): A synonym for `nodvidriver`.
+  * `resetdvidriver` (default): Negation of `nodvidriver`. Enables the
+    functionality of this package.
+  * `dvips`/`dvipdfmx`/`dvisvgm`: Synonyms for `resetdvidriver`.
+  * `autodvidriver` (DEPRECATED): A synonym for `resetdvidriver`.
 
 #### Priority
-
-**Important**: The `priority` option is not (yet) supported under the
-new LaTeX kernel 2020-10-01.
 
   * `priority=<value>`: In DVI mode, this decides the priority of the
     ‘papersize’ specials issued by this package relative to the
@@ -66,7 +74,8 @@ new LaTeX kernel 2020-10-01.
       - `low`: Priotizes specials by others.
       - `middle`/`default` (default): Does not care about priority.
       - `high`: Priotizes specials by this package.
-    Note: The priority setting will be ignored in PDF mode.
+    Note: The 'low' priority setting is only supported in DVI mode
+    and when the LaTeX kernel is older (before 2020-10-01).
   * `olddvips`: Must be specified when you use dvips older than that
     included in TeX Live 2017, so as to make the `priority` option
     work correctly.
@@ -142,6 +151,11 @@ but `\bxpapersizesetup` will be always provided.
 Revision History
 ----------------
 
+  * Version 0.7  ‹2026/05/30›
+      - Reorganize driver options: `dvisvgm` and `resetdvidriver` are
+        added, and some options are deprecated.
+      - Restore support for the setting `priority=high`. This setting
+        is available also in PDF mode.
   * Version 0.6  ‹2022/04/28›
       - Add `autodvidriver` option.
       - Rearrange spec on driver options.
