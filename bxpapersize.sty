@@ -20,17 +20,29 @@
 
 % Note: Only non-key-value global options should be picked.
 
-%% driver options (or 'disabled')
+%% \bxpr@warn@dpopt{<old>}{<new>}
+\def\bxpr@warn@dpopt#1#2{%
+  \PackageWarning\bxpr@pkgname
+   {Option '#1' is DEPRECATED (you must\MessageBreak
+    use '#2' instead),}}
+
+%% driver options
 \chardef\bxpr@disabled=0
-\DeclareOption{disabled}{%
+\DeclareOption{disabled}{% DEPRECATED
+  \bxpr@warn@dpopt{disabled}{nodvidriver}%
   \chardef\bxpr@disabled=1 }
 \DeclareOption{nodvidriver}{%
   \chardef\bxpr@disabled=1 }
-\DeclareOption{autodvidriver}{%
+\DeclareOption{resetdvidriver}{%
+  \chardef\bxpr@disabled=0 }
+\DeclareOption{autodvidriver}{% DEPRECATED
+  \bxpr@warn@dpopt{autodvidriver}{resetdvidriver}%
   \chardef\bxpr@disabled=0 }
 \DeclareOption{dvips}{%
   \chardef\bxpr@disabled=0 }
 \DeclareOption{dvipdfmx}{%
+  \chardef\bxpr@disabled=0 }
+\DeclareOption{dvisvgm}{%
   \chardef\bxpr@disabled=0 }
 %% 'olddvips'
 \chardef\bxpr@olddvips=0
